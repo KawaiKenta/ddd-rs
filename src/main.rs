@@ -1,14 +1,13 @@
-use crate::value_object::Money;
-
+mod entity;
 mod value_object;
 
-fn main() {
-    let me = Money::new(1000, "JPY".to_string());
-    let other = Money::new(3000, "USD".to_string());
+use entity::User;
 
-    let result = match me.add(other) {
-        Ok(money) => money,
-        Err(err) => panic!("{}", err),
-    };
-    println!("result: {:?}", result);
+fn main() {
+    let me = User::new("Taro".to_string(), "Yamada".to_string());
+    let doppelganger = User::new("Taro".to_string(), "Yamada".to_string());
+    println!("me: {:?}", me);
+    println!("doppelganger: {:?}", doppelganger);
+    println!("me == doppelganger: {}", me == doppelganger);
+    println!("me == me: {}", me == me)
 }
