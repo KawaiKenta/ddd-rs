@@ -10,6 +10,7 @@ use uuid::Uuid;
  * 加えて、エンティティは可変であるため、ライフタイムを通じて値が変更される可能性がある
  * 基本的には値オブジェクトを使い、必要に応じてエンティティへと変更する
  */
+#[derive(Clone)]
 pub struct User {
     id: uuid::Uuid,
     user_name: UserName,
@@ -79,6 +80,7 @@ mod user_tests {
     }
 }
 
+#[derive(Clone)]
 pub struct UserName {
     first_name: String,
     last_name: String,
