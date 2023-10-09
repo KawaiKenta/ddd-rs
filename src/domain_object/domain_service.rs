@@ -16,6 +16,7 @@ where
     }
 
     pub fn exists(&self, user: &User) -> bool {
+        println!("{:#?}", self.repo);
         self.repo.find(user.clone()).is_some()
     }
 }
