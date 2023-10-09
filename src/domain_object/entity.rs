@@ -31,6 +31,10 @@ impl User {
         self.user_name.first_name = first_name;
         self.user_name.last_name = last_name;
     }
+
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
 }
 
 // impl Eq for User {}

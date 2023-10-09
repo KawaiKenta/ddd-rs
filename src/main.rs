@@ -3,19 +3,38 @@ mod repository;
 
 use domain_object::domain_service::UserService;
 use domain_object::entity::{User, UserName};
-use repository::{IUserRepository, UserRepository};
+use repository::{IUserRepository, InmemoryUserRepository};
 
 fn main() -> Result<(), String> {
-    let mut user_repository = UserRepository::new();
-    let user_service = UserService::new(user_repository);
-
-    let user_name = UserName::new("Joen".to_string(), "Doe".to_string())?;
-
-    let user = User::new(user_name);
-    if user_service.exists(&user) {
-        return Err("ユーザーは既に存在しています".to_string());
+    let repo = InmemoryUserRepository::new();
+    let user_service = UserService::new(&repo);
+    let user_application_service = UserApplicationService::new(repo, user_service);
+    for i in 0..100 {
+        user_application_service.register(format!("taro{}", i), format!("yamada{}", i))?;
     }
-    // serviceでrepositoryの所有権を奪っているので、ここでuser_repositoryを使うことはできない
-    user_repository.save(user.clone());
+    println!("{:#?}", user_application_service.repo);
     Ok(())
+}
+
+pub struct UserApplicationService<Repo: IUserRepository> {
+    repo: Repo,
+    user_service: UserService<Repo>,
+}
+
+impl<Repo> UserApplicationService<Repo>
+where
+    Repo: IUserRepository,
+{
+    pub fn new(repo: Repo, user_service: UserService<Repo>) -> Self {
+        Self { repo, user_service }
+    }
+
+    pub fn register(&self, fname: String, lname: String) -> Result<(), String> {
+        let user_name = UserName::new(fname, lname)?;
+        let user = User::new(user_name);
+        if self.user_service.exists(&user) {
+            return Err("ユーザーは既に存在しています".to_string());
+        }
+        self.repo.save(user)
+    }
 }

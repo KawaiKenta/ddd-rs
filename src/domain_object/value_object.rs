@@ -1,3 +1,5 @@
+use std::{marker::PhantomData, ops::Add};
+
 /***
  * 値オブジェクト
  * - 値オブジェクトは、値を表すオブジェクト
@@ -50,27 +52,32 @@ mod user_tests {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Money {
+pub struct Money<T> {
     amount: usize,
-    currency: String,
+    currency: PhantomData<T>,
 }
 
-impl Money {
-    pub fn new(amount: usize, currency: String) -> Money {
-        Money { amount, currency }
-    }
-    // 値オブジェクトは振る舞いを持てる
-    pub fn add(&self, other: Money) -> Result<Money, String> {
-        if self.currency != other.currency {
-            return Err("通貨単位が異なります".to_string());
+impl<T> Money<T> {
+    pub fn new(amount: usize) -> Self {
+        Self {
+            amount: amount,
+            currency: PhantomData::<T>,
         }
-
-        Ok(Money {
-            amount: self.amount + other.amount,
-            currency: self.currency.clone(),
-        })
     }
 }
+
+impl<T> Add for Money<T> {
+    type Output = Money<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::new(self.amount + rhs.amount)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum JPY {}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum USD {}
 
 #[cfg(test)]
 mod money_tests {
@@ -78,36 +85,25 @@ mod money_tests {
 
     #[test]
     fn test_money() {
-        let money = Money::new(1000, "JPY".to_string());
+        let money = Money::<JPY>::new(1000);
         assert_eq!(money.amount, 1000);
-        assert_eq!(money.currency, "JPY".to_string());
+        assert_eq!(money.currency, PhantomData::<JPY>);
     }
 
     #[test]
     fn test_eq() {
-        let money = Money::new(1000, "JPY".to_string());
-        let same_money = Money::new(1000, "JPY".to_string());
+        let money = Money::<JPY>::new(1000);
+        let same_money = Money::<JPY>::new(1000);
+
         assert_eq!(money, same_money);
     }
 
     #[test]
     fn test_add() {
-        let me = Money::new(1000, "JPY".to_string());
-        let other = Money::new(3000, "JPY".to_string());
+        let me = Money::<JPY>::new(1000);
+        let other = Money::<JPY>::new(3000);
 
-        let result = match me.add(other) {
-            Ok(money) => money,
-            Err(err) => panic!("{}", err),
-        };
+        let result = me + other;
         assert_eq!(result.amount, 4000);
-    }
-
-    #[test]
-    fn test_err_with_diff_currency() {
-        let me = Money::new(1000, "JPY".to_string());
-        let other = Money::new(3000, "USD".to_string());
-
-        let result = me.add(other);
-        assert_eq!(result, Err("通貨単位が異なります".to_string()));
     }
 }

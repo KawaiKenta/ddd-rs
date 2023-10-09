@@ -2,21 +2,20 @@ use crate::repository::IUserRepository;
 
 use super::entity::User;
 
-pub struct UserService<T: IUserRepository> {
-    user_repository: T,
+#[derive(Clone, Debug)]
+pub struct UserService<Repo: IUserRepository> {
+    repo: Repo,
 }
 
-impl<T: IUserRepository> UserService<T> {
-    pub fn new(user_repository: T) -> UserService<T> {
-        UserService {
-            user_repository: user_repository,
-        }
+impl<Repo> UserService<Repo>
+where
+    Repo: IUserRepository,
+{
+    pub fn new(repo: &Repo) -> Self {
+        Self { repo: repo.clone() }
     }
 
     pub fn exists(&self, user: &User) -> bool {
-        match self.user_repository.find(user.clone()) {
-            Some(_) => true,
-            None => false,
-        }
+        self.repo.find(user.clone()).is_some()
     }
 }
